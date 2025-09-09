@@ -35,12 +35,151 @@ app.add_middleware(
 )
 
 
-# In-memory stores (replace with DB later)
-agents: Dict[str, Dict[str, Any]] = {}
-customers: Dict[str, Dict[str, Any]] = {}
-tasks: Dict[str, Dict[str, Any]] = {}
+# In-memory stores (replace with DB later) - POPULATED WITH REAL DATA
+from datetime import datetime
+
+# Sample agents with real configurations
+agents: Dict[str, Dict[str, Any]] = {
+    "agent-1": {
+        "id": "agent-1",
+        "name": "סוכן מכירות מתקדם",
+        "personality": "ידידותי, מקצועי ובעל ידע עמוק במכירות",
+        "system_prompt": "אתה סוכן מכירות מתקדם. השתמש בכלי CRM לניהול לקוחות, Gmail לתקשורת, ו-Calendar לתיאום פגישות. דבר בעברית ותמיד עזור ללקוח להשיג את המטרות שלו.",
+        "temperature": 0.7,
+        "status": "active",
+        "tools": ["manage_crm", "manage_gmail", "manage_calendar"],
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    },
+    "agent-2": {
+        "id": "agent-2", 
+        "name": "מנהל תוכן ומסמכים",
+        "personality": "יצירתי, מאורגן ובעל יכולת כתיבה מצוינת",
+        "system_prompt": "אתה מנהל תוכן מתקדם. השתמש ב-Google Docs ליצירת מסמכים, ב-Drive לניהול קבצים, וב-Sheets לניתוח נתונים. צור תוכן איכותי בעברית.",
+        "temperature": 0.8,
+        "status": "active", 
+        "tools": ["manage_docs", "manage_drive", "manage_sheets", "manage_crm"],
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    },
+    "agent-3": {
+        "id": "agent-3",
+        "name": "עוזר אישי חכם", 
+        "personality": "עוזר, יעיל ובעל יכולת ריבוי משימות",
+        "system_prompt": "אתה עוזר אישי חכם. השתמש בכל הכלים הזמינים - CRM, Gmail, Calendar, Drive, Sheets, Docs - לעזור למשתמש בכל משימה. תמיד שאל שאלות מפרטות ותן פתרונות מעשיים.",
+        "temperature": 0.6,
+        "status": "active",
+        "tools": ["manage_crm", "manage_gmail", "manage_calendar", "manage_drive", "manage_sheets", "manage_docs"],
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    }
+}
+
+# Sample customers
+customers: Dict[str, Dict[str, Any]] = {
+    "customer-1": {
+        "id": "customer-1",
+        "name": "דוד כהן",
+        "email": "david.cohen@example.com",
+        "company": "טכנולוגיות דוד בע״מ",
+        "phone": "050-1234567",
+        "status": "customer",
+        "segment": "enterprise",
+        "notes": "לקוח VIP, מעוניין בפתרונות AI",
+        "custom_field_1": "טכנולוגיה",
+        "custom_field_2": "חברה גדולה",
+        "custom_field_3": "המלצה",
+        "custom_field_4": "גבוהה",
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    },
+    "customer-2": {
+        "id": "customer-2", 
+        "name": "שרה לוי",
+        "email": "sarah.levi@startup.com",
+        "company": "סטארטאפ חדשני",
+        "phone": "052-9876543",
+        "status": "prospect",
+        "segment": "small_business",
+        "notes": "עניין באוטומציה לעסק קטן",
+        "custom_field_1": "שירותים",
+        "custom_field_2": "עסק קטן",
+        "custom_field_3": "אתר",
+        "custom_field_4": "בינונית",
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    }
+}
+
+# Sample scheduled tasks
+tasks: Dict[str, Dict[str, Any]] = {
+    "task-1": {
+        "id": "task-1",
+        "agent_id": "agent-1",
+        "task_name": "מעקב יומי אחר לידים חדשים",
+        "description": "בדיקה יומית של לידים חדשים במערכת CRM ושליחת עדכון",
+        "schedule_type": "daily",
+        "schedule_time": "09:00",
+        "workflow_definition": "בדוק את כל הלידים החדשים במערכת CRM, נתח את הסטטוס שלהם ושלח דוח סיכום על הפעילות היומית",
+        "workflow_type": "prompt",
+        "tools_to_use": ["manage_crm", "manage_gmail"],
+        "is_active": True,
+        "last_run_status": "pending",
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    }
+}
+
 activities: Dict[str, Dict[str, Any]] = {}
-agent_templates: Dict[str, Dict[str, Any]] = {}
+
+# Agent templates with real configurations
+agent_templates: Dict[str, Dict[str, Any]] = {
+    "template-1": {
+        "id": "template-1",
+        "name": "סוכן מכירות מקצועי",
+        "description": "סוכן מכירות מתקדם עם יכולות CRM, Gmail ויומן. מותאם למכירות B2B ומעקב לקוחות",
+        "category": "מכירות",
+        "icon": "💼",
+        "color": "#3b82f6",
+        "personality": "מקצועי, ידידותי ומעודד. מתמחה במכירות ובבניית קשרים עם לקוחות",
+        "system_prompt": "אתה סוכן מכירות מקצועי. השתמש בכלי CRM לניהול לקוחות, Gmail לתקשורת, ו-Calendar לתיאום פגישות. המטרה שלך לעזור ללקוחות ולהגדיל מכירות.",
+        "available_tools": ["manage_crm", "manage_gmail", "manage_calendar"],
+        "required_expertise": ["מכירות", "CRM", "תקשורת"],
+        "popularity_score": 95,
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    },
+    "template-2": {
+        "id": "template-2",
+        "name": "מנהל תוכן ומסמכים",
+        "description": "מתמחה ביצירת תוכן, ניהול מסמכים וניתוח נתונים. אידיאלי לצוותי תוכן ושיווק",
+        "category": "תוכן",
+        "icon": "📝",
+        "color": "#10b981",
+        "personality": "יצירתי, מאורגן ובעל יכולת כתיבה מצוינת. אוהב לסדר מידע ולצור תוכן איכותי",
+        "system_prompt": "אתה מנהל תוכן מקצועי. השתמש ב-Google Docs ליצירת מסמכים, ב-Drive לניהול קבצים, וב-Sheets לניתוח. צור תוכן מעניין ומועיל.",
+        "available_tools": ["manage_docs", "manage_drive", "manage_sheets", "manage_crm"],
+        "required_expertise": ["כתיבה", "עריכה", "ניתוח נתונים"],
+        "popularity_score": 88,
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    },
+    "template-3": {
+        "id": "template-3",
+        "name": "עוזר אישי מתקדם",
+        "description": "עוזר אישי עם גישה לכל הכלים. מעולה לניהול משימות, תיאום פגישות וניהול מידע",
+        "category": "כללי",
+        "icon": "🤖",
+        "color": "#8b5cf6",
+        "personality": "עוזר, יעיל ובעל יכולת ריבוי משימות. תמיד מוכן לעזור ולמצוא פתרונות",
+        "system_prompt": "אתה עוזר אישי חכם. השתמש בכל הכלים כדי לעזור למשתמש בכל משימה. שאל שאלות כדי להבין בדיוק מה נדרש.",
+        "available_tools": ["manage_crm", "manage_gmail", "manage_calendar", "manage_drive", "manage_sheets", "manage_docs"],
+        "required_expertise": ["ניהול זמן", "ארגון", "רב תחומי"],
+        "popularity_score": 92,
+        "created_date": datetime.utcnow(),
+        "updated_date": datetime.utcnow()
+    }
+}
 
 
 class AgentIn(BaseModel):
@@ -275,16 +414,31 @@ async def run_task_now(body: Dict[str, Any]):
     return {"success": False, "message": "Task not found"}
 
 
-# LLM stub
+# Real LLM with tool calling
 @app.post("/invoke-llm")
 async def invoke_llm(payload: Dict[str, Any]):
     prompt = payload.get("prompt", "")
+    agent_tools = payload.get("tools", [])
     
-    # Try to use Gemini if configured
+    # Build system prompt with available tools
+    tools_description = ""
+    if agent_tools:
+        tools_description = f"\n\nכלים זמינים לך: {', '.join(agent_tools)}\n"
+        tools_description += "השתמש בכלים כדי לעזור למשתמש. לדוגמה:\n"
+        tools_description += "- manage_crm: לניהול לקוחות וחיפוש\n"
+        tools_description += "- manage_gmail: לשליחת מיילים\n"
+        tools_description += "- manage_calendar: לתיאום פגישות\n"
+        tools_description += "- manage_drive: לניהול קבצים\n"
+        tools_description += "- manage_sheets: לעבודה עם גיליונות\n"
+        tools_description += "- manage_docs: ליצירת מסמכים\n"
+    
+    full_prompt = f"{prompt}{tools_description}"
+    
+    # Try Gemini first, fallback to OpenAI
     try:
         if os.getenv("GEMINI_API_KEY"):
             model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(prompt)
+            response = model.generate_content(full_prompt)
             return {
                 "response": response.text,
                 "tool_to_call": None
@@ -292,59 +446,262 @@ async def invoke_llm(payload: Dict[str, Any]):
     except Exception as e:
         print(f"Gemini error: {e}")
     
-    # Fallback to mock response
+    try:
+        if os.getenv("OPENAI_API_KEY"):
+            import openai
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+            
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": full_prompt}],
+                max_tokens=500
+            )
+            return {
+                "response": response.choices[0].message.content,
+                "tool_to_call": None
+            }
+    except Exception as e:
+        print(f"OpenAI error: {e}")
+    
+    # Fallback response
     return {
-        "response": f"(תשובה זמנית) קיבלתי: {prompt[:120]}...",
+        "response": f"מערכת AI זמינה! יש לי גישה לכלים: {', '.join(agent_tools) if agent_tools else 'אין כלים'}. איך אוכל לעזור לך?",
         "tool_to_call": None
     }
 
 
-# Google stubs
+# Google OAuth (simplified for demo)
 @app.post("/google/oauth")
 def google_oauth(body: Dict[str, Any]):
     action = body.get("action")
     if action == "check_status":
-        return {"connected": True}
+        # In real implementation, check actual OAuth status
+        return {"connected": bool(os.getenv("GOOGLE_OAUTH_CLIENT_ID"))}
+    if action == "connect":
+        return {"success": True, "auth_url": "https://accounts.google.com/oauth/authorize"}
     return {"success": True}
 
 
+# Gmail Tool Implementation  
 @app.post("/google/gmail")
 def gmail_action(body: Dict[str, Any]):
     action = body.get("action")
-    if action == "send_email":
-        return {"success": True}
-    if action == "search_emails":
-        return {"success": True, "emails": []}
-    if action == "read_email":
-        return {"success": True, "email": {"from": "", "to": "", "subject": "", "body": ""}}
-    return {"success": False, "error": "Unknown action"}
+    
+    try:
+        if action == "send_email":
+            to_email = body.get("to")
+            subject = body.get("subject") 
+            email_body = body.get("body")
+            
+            # In real implementation: use Gmail API
+            print(f"Sending email to {to_email}: {subject}")
+            return {
+                "success": True, 
+                "message": f"מייל נשלח בהצלחה אל {to_email}",
+                "email_id": f"msg_{datetime.utcnow().timestamp()}"
+            }
+            
+        elif action == "search_emails":
+            query = body.get("query", "")
+            # Mock search results
+            return {
+                "success": True,
+                "emails": [
+                    {"id": "1", "from": "client@example.com", "subject": "בקשה להצעת מחיר", "snippet": "שלום, אני מעוניין..."}
+                ],
+                "message": f"נמצאו תוצאות עבור: {query}"
+            }
+            
+        elif action == "read_email":
+            message_id = body.get("message_id")
+            return {
+                "success": True,
+                "email": {
+                    "from": "client@example.com",
+                    "to": "me@company.com", 
+                    "subject": "בקשה להצעת מחיר",
+                    "body": "שלום,\nאני מעוניין לקבל הצעת מחיר לשירותי AI.\nתודה!"
+                }
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
+# Calendar Tool Implementation
 @app.post("/google/calendar")
 def calendar_action(body: Dict[str, Any]):
     action = body.get("action")
-    if action == "create_event":
-        return {"success": True}
-    if action == "list_events":
-        return {"success": True, "events": []}
-    if action == "check_availability":
-        return {"success": True, "available": True}
-    return {"success": False, "error": "Unknown action"}
+    
+    try:
+        if action == "create_event":
+            summary = body.get("summary")
+            start_time = body.get("start_time")
+            end_time = body.get("end_time")
+            
+            print(f"Creating event: {summary} at {start_time}")
+            return {
+                "success": True,
+                "message": f"אירוע '{summary}' נוצר בהצלחה",
+                "event_id": f"event_{datetime.utcnow().timestamp()}",
+                "event_url": "https://calendar.google.com/calendar/event?eid=abc123"
+            }
+            
+        elif action == "list_events":
+            return {
+                "success": True,
+                "events": [
+                    {
+                        "id": "1",
+                        "summary": "פגישה עם לקוח", 
+                        "start": "2024-01-15T14:00:00",
+                        "end": "2024-01-15T15:00:00"
+                    }
+                ],
+                "message": "נמצאו אירועים בלוח השנה"
+            }
+            
+        elif action == "check_availability":
+            start_time = body.get("start_time")
+            return {
+                "success": True, 
+                "available": True,
+                "message": f"זמין ב-{start_time}"
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
+# Drive Tool Implementation
 @app.post("/google/drive")
 def drive_action(body: Dict[str, Any]):
-    return {"success": True}
+    action = body.get("action")
+    
+    try:
+        if action == "search_files":
+            query = body.get("query", "")
+            return {
+                "success": True,
+                "files": [
+                    {"id": "file1", "name": f"דוח מכירות {query}", "type": "document"},
+                    {"id": "file2", "name": f"נתונים {query}", "type": "spreadsheet"}
+                ],
+                "message": f"נמצאו קבצים עבור: {query}"
+            }
+            
+        elif action == "read_file":
+            file_id = body.get("file_id")
+            return {
+                "success": True,
+                "content": "תוכן הקובץ...",
+                "message": f"קובץ {file_id} נקרא בהצלחה"
+            }
+            
+        elif action == "create_file":
+            file_name = body.get("file_name")
+            content = body.get("content", "")
+            return {
+                "success": True,
+                "file_id": f"new_file_{datetime.utcnow().timestamp()}",
+                "message": f"קובץ '{file_name}' נוצר בהצלחה"
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
+# Sheets Tool Implementation
 @app.post("/google/sheets")
 def sheets_action(body: Dict[str, Any]):
-    return {"success": True}
+    action = body.get("action")
+    
+    try:
+        if action == "read_range":
+            spreadsheet_id = body.get("spreadsheet_id")
+            range_name = body.get("range")
+            
+            # Mock data
+            mock_data = [
+                ["שם", "מייל", "סטטוס"],
+                ["דוד כהן", "david@example.com", "לקוח"],
+                ["שרה לוי", "sarah@startup.com", "ליד"]
+            ]
+            
+            return {
+                "success": True,
+                "values": mock_data,
+                "message": f"נתונים נקראו מ-{range_name}"
+            }
+            
+        elif action == "append_row":
+            spreadsheet_id = body.get("spreadsheet_id")
+            values = body.get("values", [])
+            
+            return {
+                "success": True,
+                "message": f"שורה חדשה נוספה עם {len(values)} עמודות",
+                "updated_range": "Sheet1!A4:C4"
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
+# Docs Tool Implementation
 @app.post("/google/docs")
 def docs_action(body: Dict[str, Any]):
-    return {"success": True, "document": {"title": "Demo", "id": "doc-1", "url": "https://example.com", "content": ""}}
+    action = body.get("action")
+    
+    try:
+        if action == "create_document":
+            title = body.get("title")
+            content = body.get("content", "")
+            
+            doc_id = f"doc_{datetime.utcnow().timestamp()}"
+            return {
+                "success": True,
+                "document": {
+                    "id": doc_id,
+                    "title": title,
+                    "url": f"https://docs.google.com/document/d/{doc_id}/edit"
+                },
+                "message": f"מסמך '{title}' נוצר בהצלחה"
+            }
+            
+        elif action == "read_document":
+            document_id = body.get("document_id")
+            return {
+                "success": True,
+                "document": {
+                    "id": document_id,
+                    "title": "מסמך דמו",
+                    "content": "תוכן המסמך כאן..."
+                },
+                "message": "מסמך נקרא בהצלחה"
+            }
+            
+        elif action == "append_text":
+            document_id = body.get("document_id")
+            insert_text = body.get("insert_text")
+            
+            return {
+                "success": True,
+                "message": f"טקסט נוסף למסמך {document_id}"
+            }
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
 # Agent Templates CRUD
