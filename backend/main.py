@@ -4,8 +4,27 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 from datetime import datetime
+import os
+import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import google.generativeai as genai
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import Flow
 
 app = FastAPI(title="Local Agent Backend", version="0.1.0")
+
+# Initialize scheduler
+scheduler = AsyncIOScheduler()
+
+# Configure Google Gemini if API key is available
+try:
+    if os.getenv("GEMINI_API_KEY"):
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+except Exception as e:
+    print(f"Failed to configure Gemini: {e}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +40,7 @@ agents: Dict[str, Dict[str, Any]] = {}
 customers: Dict[str, Dict[str, Any]] = {}
 tasks: Dict[str, Dict[str, Any]] = {}
 activities: Dict[str, Dict[str, Any]] = {}
+agent_templates: Dict[str, Dict[str, Any]] = {}
 
 
 class AgentIn(BaseModel):
@@ -202,21 +222,63 @@ def delete_task(task_id: str):
     return {"success": True}
 
 
-@app.post("/scheduled-tasks/run")
-def run_task(body: Dict[str, Any]):
-    task_id = body.get("task_id")
-    if task_id and task_id in tasks:
+async def execute_scheduled_task(task_id: str):
+    """Execute a scheduled task"""
+    if task_id not in tasks:
+        return
+    
+    task = tasks[task_id]
+    try:
+        print(f"Executing task: {task['task_name']}")
+        
+        # Update task status
+        tasks[task_id]["last_run_status"] = "running"
+        tasks[task_id]["updated_date"] = datetime.utcnow()
+        
+        # Execute the task based on workflow_type
+        if task.get("workflow_type") == "prompt":
+            # Execute LLM prompt
+            response = await invoke_llm({"prompt": task.get("workflow_definition", "")})
+            print(f"Task {task_id} LLM response: {response.get('response', '')[:100]}...")
+        
+        # Mark as completed
         tasks[task_id]["last_run_status"] = "success"
         tasks[task_id]["updated_date"] = datetime.utcnow()
-    return {"success": True, "message": "Task executed (stub)"}
+        
+    except Exception as e:
+        print(f"Task {task_id} failed: {e}")
+        tasks[task_id]["last_run_status"] = "failed"
+        tasks[task_id]["updated_date"] = datetime.utcnow()
+
+@app.post("/scheduled-tasks/run")
+async def run_task_now(body: Dict[str, Any]):
+    task_id = body.get("task_id")
+    if task_id and task_id in tasks:
+        await execute_scheduled_task(task_id)
+        return {"success": True, "message": "Task executed"}
+    return {"success": False, "message": "Task not found"}
 
 
 # LLM stub
 @app.post("/invoke-llm")
-def invoke_llm(payload: Dict[str, Any]):
+async def invoke_llm(payload: Dict[str, Any]):
     prompt = payload.get("prompt", "")
+    
+    # Try to use Gemini if configured
+    try:
+        if os.getenv("GEMINI_API_KEY"):
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(prompt)
+            return {
+                "response": response.text,
+                "tool_to_call": None
+            }
+    except Exception as e:
+        print(f"Gemini error: {e}")
+    
+    # Fallback to mock response
     return {
-        "response": f"(תשובת דמה) קיבלתי: {prompt[:120]}...",
+        "response": f"(תשובה זמנית) קיבלתי: {prompt[:120]}...",
         "tool_to_call": None
     }
 
@@ -269,8 +331,73 @@ def docs_action(body: Dict[str, Any]):
     return {"success": True, "document": {"title": "Demo", "id": "doc-1", "url": "https://example.com", "content": ""}}
 
 
+# Agent Templates CRUD
+@app.get("/agent-templates", response_model=List[Dict[str, Any]])
+def list_agent_templates():
+    return list(agent_templates.values())
+
+@app.get("/agent-templates/{template_id}")
+def get_agent_template(template_id: str):
+    if template_id not in agent_templates:
+        raise HTTPException(404, "Template not found")
+    return agent_templates[template_id]
+
+@app.post("/agent-templates")
+def create_agent_template(payload: Dict[str, Any]):
+    now = datetime.utcnow()
+    template_id = str(uuid4())
+    obj = {**payload, "id": template_id, "created_date": now, "updated_date": now}
+    agent_templates[template_id] = obj
+    return obj
+
+@app.put("/agent-templates/{template_id}")
+def update_agent_template(template_id: str, payload: Dict[str, Any]):
+    if template_id not in agent_templates:
+        raise HTTPException(404, "Template not found")
+    now = datetime.utcnow()
+    obj = {**agent_templates[template_id], **payload, "updated_date": now}
+    agent_templates[template_id] = obj
+    return obj
+
+@app.delete("/agent-templates/{template_id}")
+def delete_agent_template(template_id: str):
+    agent_templates.pop(template_id, None)
+    return {"success": True}
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the scheduler and load existing tasks"""
+    scheduler.start()
+    print("Scheduler started")
+    
+    # Add existing tasks to scheduler
+    for task_id, task in tasks.items():
+        if task.get("is_active", True):
+            try:
+                schedule_type = task.get("schedule_type", "daily")
+                schedule_time = task.get("schedule_time", "09:00")
+                
+                if schedule_type == "daily":
+                    hour, minute = map(int, schedule_time.split(":"))
+                    scheduler.add_job(
+                        execute_scheduled_task,
+                        CronTrigger(hour=hour, minute=minute),
+                        args=[task_id],
+                        id=f"task_{task_id}",
+                        replace_existing=True
+                    )
+                    print(f"Scheduled daily task {task_id} at {schedule_time}")
+            except Exception as e:
+                print(f"Failed to schedule task {task_id}: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the scheduler"""
+    scheduler.shutdown()
+    print("Scheduler stopped")
+
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "scheduler_running": scheduler.running}
 
 

@@ -28,8 +28,8 @@ export default function Agents() {
                 Agent.list(),
                 AgentTemplate.list()
             ]);
-            setAgents(agentsData);
-            setTemplates(templatesData);
+            setAgents(Array.isArray(agentsData) ? agentsData : []);
+            setTemplates(Array.isArray(templatesData) ? templatesData : []);
         } catch (error) {
             console.error('Error loading agents:', error);
         } finally {
@@ -49,9 +49,9 @@ export default function Agents() {
         loadData();
     };
 
-    const filteredAgents = agents.filter(agent =>
-        agent.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredAgents = Array.isArray(agents) ? agents.filter(agent =>
+        agent.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     return (
         <div className="space-y-6">
