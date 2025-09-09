@@ -493,34 +493,68 @@ async def invoke_llm(payload: Dict[str, Any]):
     prompt = payload.get("prompt", "")
     agent_tools = payload.get("tools", [])
     
-    # Build system prompt with available tools
-    tools_description = ""
-    if agent_tools:
-        tools_description = f"\n\nכלים זמינים לך: {', '.join(agent_tools)}\n"
-        tools_description += "השתמש בכלים כדי לעזור למשתמש. לדוגמה:\n"
-        tools_description += "- manage_crm: לניהול לקוחות וחיפוש\n"
-        tools_description += "- manage_gmail: לשליחת מיילים\n"
-        tools_description += "- manage_calendar: לתיאום פגישות\n"
-        tools_description += "- manage_drive: לניהול קבצים\n"
-        tools_description += "- manage_sheets: לעבודה עם גיליונות\n"
-        tools_description += "- manage_docs: ליצירת מסמכים\n"
-    
-    full_prompt = f"{prompt}{tools_description}"
-    
-    # Try Gemini first, fallback to OpenAI
+    # Enhanced system prompt for tool usage
+    enhanced_prompt = f"""{prompt}
+
+אתה חייב להחזיר תגובה בפורמט JSON בדיוק כמו הדוגמה הבאה:
+{{
+  "response": "הודעה למשתמש בעברית",
+  "tool_to_call": {{ "name": "שם_כלי", "arguments": {{ "פרמטר": "ערך" }} }} או null
+}}
+
+כשמשתמש מבקש משהו שקשור ללקוחות או CRM, השתמש בכלי manage_crm.
+דוגמאות:
+- "חפש לקוח בשם יוסי" -> {{"response": "מחפש לקוח בשם יוסי...", "tool_to_call": {{"name": "manage_crm", "arguments": {{"action": "search_customers", "name": "יוסי"}}}}}}
+- "צור לקוח חדש שירה כהן" -> {{"response": "יוצר לקוח חדש...", "tool_to_call": {{"name": "manage_crm", "arguments": {{"action": "create_customer", "name": "שירה כהן"}}}}}}
+- "מה שלום?" -> {{"response": "שלום! מה שלומך? איך אוכל לעזור?", "tool_to_call": null}}
+
+תשובה חייבת להיות JSON תקין!"""
+
     try:
         if os.getenv("GEMINI_API_KEY"):
             model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(full_prompt)
+            response = model.generate_content(enhanced_prompt)
+            response_text = response.text.strip()
+            
+            # Try to parse JSON response
+            try:
+                import json
+                # Clean up response (remove markdown if present)
+                if "```json" in response_text:
+                    response_text = response_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in response_text:
+                    response_text = response_text.split("```")[1].split("```")[0].strip()
+                
+                parsed_response = json.loads(response_text)
+                
+                # Validate the response structure
+                if "response" in parsed_response:
+                    return {
+                        "response": parsed_response.get("response", "תשובה מהסוכן"),
+                        "tool_to_call": parsed_response.get("tool_to_call")
+                    }
+            except json.JSONDecodeError:
+                print(f"Failed to parse JSON: {response_text}")
+                pass
+            
+            # Fallback: try to detect tool usage from regular response
+            if any(keyword in response_text.lower() for keyword in ["חפש", "מצא", "לקוח", "crm", "צור", "עדכן"]):
+                # This is a basic heuristic - in production you'd want more sophisticated parsing
+                return {
+                    "response": response_text,
+                    "tool_to_call": {
+                        "name": "manage_crm", 
+                        "arguments": {"action": "list_recent_customers"}
+                    }
+                }
+            
             return {
-                "response": response.text,
+                "response": response_text,
                 "tool_to_call": None
             }
+            
     except Exception as e:
         print(f"Gemini error: {e}")
-    
-    # OpenAI fallback removed for now - focus on Gemini
-    # Can be added later with proper openai library setup
     
     # Fallback response
     return {
