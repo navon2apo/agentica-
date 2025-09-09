@@ -498,9 +498,7 @@ ${knowledgeBaseContent}
         temperature: agent.temperature || 0.7
       });
 
-      console.log('=== DEBUG: LLM Response ===', new Date().toLocaleTimeString());
       console.log('LLM decided to call tool:', llmResponse.tool_to_call?.name || 'No tool');
-      console.log('Tool arguments:', llmResponse.tool_to_call?.arguments || 'N/A');
 
       // Show the agent's initial response
       const agentResponseMessage = {
@@ -514,9 +512,7 @@ ${knowledgeBaseContent}
       if (llmResponse.tool_to_call) {
         const { name: toolName, arguments: toolArgs } = llmResponse.tool_to_call;
 
-        console.log('=== DEBUG: Tool Execution ===', new Date().toLocaleTimeString());
-        console.log('Tool name:', toolName);
-        console.log('Tool args:', toolArgs);
+        console.log('Tool:', toolName);
 
         // Show thinking message
         const thinkingMessage = {
@@ -859,11 +855,9 @@ ${toolResult}
 
 אנא ספק תגובה מועילת וידידותית למשתמש בעברית בהתבסס על התוצאות האלה. היה שיחתי וטבעי.`;
 
-          console.log('=== DEBUG: Generating final response ===', new Date().toLocaleTimeString());
           const finalResponse = await InvokeLLM({
             prompt: finalPrompt
           });
-          console.log('=== DEBUG: Final response received ===', new Date().toLocaleTimeString());
 
           const finalMessage = {
             sender: 'agent',
