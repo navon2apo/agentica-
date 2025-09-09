@@ -569,7 +569,7 @@ def google_oauth(body: Dict[str, Any]):
     action = body.get("action")
     if action == "check_status":
         # In real implementation, check actual OAuth status
-        return {"connected": bool(os.getenv("GOOGLE_OAUTH_CLIENT_ID"))}
+        return {"connected": bool(os.getenv("GOOGLE_CLIENT_ID"))}
     if action == "connect":
         return {"success": True, "auth_url": "https://accounts.google.com/oauth/authorize"}
     return {"success": True}
