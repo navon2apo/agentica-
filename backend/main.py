@@ -493,11 +493,22 @@ async def invoke_llm(payload: Dict[str, Any]):
     prompt = payload.get("prompt", "")
     agent_tools = payload.get("tools", [])
     
-    # Shorter prompt for better performance
+    # Enhanced system prompt for tool usage
     enhanced_prompt = f"""{prompt}
 
-השב בJSON: {{"response": "הודעה", "tool_to_call": {{"name": "manage_crm", "arguments": {{"action": "search_customers", "name": "שם"}}}} או null}}
-אם צריך לחפש/לנהל לקוחות - השתמש בכלי manage_crm."""
+אתה חייב להחזיר תגובה בפורמט JSON בדיוק כמו הדוגמה הבאה:
+{{
+  "response": "הודעה למשתמש בעברית",
+  "tool_to_call": {{ "name": "שם_כלי", "arguments": {{ "פרמטר": "ערך" }} }} או null
+}}
+
+כשמשתמש מבקש משהו שקשור ללקוחות או CRM, השתמש בכלי manage_crm.
+דוגמאות:
+- "חפש לקוח בשם יוסי" -> {{"response": "מחפש לקוח בשם יוסי...", "tool_to_call": {{"name": "manage_crm", "arguments": {{"action": "search_customers", "name": "יוסי"}}}}}}
+- "צור לקוח חדש שירה כהן" -> {{"response": "יוצר לקוח חדש...", "tool_to_call": {{"name": "manage_crm", "arguments": {{"action": "create_customer", "name": "שירה כהן"}}}}}}
+- "מה שלום?" -> {{"response": "שלום! מה שלומך? איך אוכל לעזור?", "tool_to_call": null}}
+
+תשובה חייבת להיות JSON תקין!"""
 
     try:
         if os.getenv("GEMINI_API_KEY"):
@@ -507,6 +518,7 @@ async def invoke_llm(payload: Dict[str, Any]):
             
             # Try to parse JSON response
             try:
+                import json
                 # Clean up response (remove markdown if present)
                 if "```json" in response_text:
                     response_text = response_text.split("```json")[1].split("```")[0].strip()

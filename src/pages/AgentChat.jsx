@@ -498,7 +498,9 @@ ${knowledgeBaseContent}
         temperature: agent.temperature || 0.7
       });
 
+      console.log('=== DEBUG: LLM Response ===');
       console.log('LLM decided to call tool:', llmResponse.tool_to_call?.name || 'No tool');
+      console.log('Tool arguments:', llmResponse.tool_to_call?.arguments || 'N/A');
 
       // Show the agent's initial response
       const agentResponseMessage = {
@@ -512,7 +514,9 @@ ${knowledgeBaseContent}
       if (llmResponse.tool_to_call) {
         const { name: toolName, arguments: toolArgs } = llmResponse.tool_to_call;
 
-        console.log('Tool:', toolName);
+        console.log('=== DEBUG: Tool Execution ===');
+        console.log('Tool name:', toolName);
+        console.log('Tool args:', toolArgs);
 
         // Show thinking message
         const thinkingMessage = {
