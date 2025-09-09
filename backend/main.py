@@ -572,10 +572,14 @@ def google_oauth(body: Dict[str, Any]):
         # Check if user has valid Google OAuth token
         user_id = "default_user"  # In real app: get from auth session
         
-        # For now, check if app credentials exist (later: check user token)
+        # Check if app credentials exist and if user has tokens
         has_app_credentials = bool(os.getenv("GOOGLE_CLIENT_ID"))
-        # TODO: Check if user has valid tokens in database
-        user_has_token = False  # TODO: Check if user has valid Google OAuth tokens
+        
+        # Check if user has valid Google OAuth tokens
+        global user_oauth_tokens
+        if 'user_oauth_tokens' not in globals():
+            user_oauth_tokens = {}
+        user_has_token = user_oauth_tokens.get(user_id, False)
         
         return {
             "success": True,
@@ -932,8 +936,11 @@ def oauth_callback(code: str = None, error: str = None):
         # TODO: Exchange code for tokens and save to user
         print(f"OAuth code received: {code[:20]}...")
         
-        # Simulate token exchange success
-        # In real implementation: call Google token endpoint
+        # For demo: mark user as having tokens (simulate successful token exchange)
+        # In real implementation: call Google token endpoint and save tokens
+        # This simulates that the user now has valid Google OAuth tokens
+        global user_oauth_tokens
+        user_oauth_tokens = {"default_user": True}  # Simulate user tokens saved
         
         return f"""
         <html>

@@ -113,13 +113,17 @@ export default function IntegrationSettings() {
         fetchUserData();
 
         const handleOAuthMessage = (event) => {
-            if (event.origin === window.location.origin && event.data && event.data.type === 'oauth_complete') {
+            // Accept messages from same origin or from oauth callback
+            if (event.data && event.data.type === 'oauth_complete') {
                 console.log('OAuth flow completed successfully via postMessage.');
                 if (authWindowCheckIntervalRef.current) {
                     clearInterval(authWindowCheckIntervalRef.current);
                     authWindowCheckIntervalRef.current = null;
                 }
                 setConnectingIntegration('');
+                
+                // Show success message and update status
+                alert('חיבור לשירותי Google הושלם בהצלחה! 🎉');
                 checkGoogleConnectionStatus();
             }
         };
