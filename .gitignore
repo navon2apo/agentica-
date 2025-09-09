@@ -18,6 +18,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+.pythonlibs/
 *.pyc
 
 # OS/Editor
