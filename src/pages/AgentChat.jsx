@@ -865,7 +865,7 @@ ${toolResult}
 
           const finalMessage = {
             sender: 'agent',
-            text: finalResponse,
+            text: finalResponse.response || finalResponse || "תגובה מהסוכן",
             timestamp: new Date()
           };
           setMessages((prev) => [...prev, finalMessage]);
