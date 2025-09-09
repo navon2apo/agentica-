@@ -149,7 +149,8 @@ export default function IntegrationSettings() {
                 if (integration.status === 'connected') {
                     // Disconnect
                     const response = await googleOAuth({ action: 'disconnect' });
-                    if (response.data.success) {
+                    const responseData = response.data || response;
+                    if (responseData.success) {
                         alert('החיבור לשירותי Google נותק בהצלחה');
                         await checkGoogleConnectionStatus();
                     } else {
@@ -163,9 +164,10 @@ export default function IntegrationSettings() {
                         integration_id: 'google-services'
                     });
 
-                    if (response.data.success && response.data.authUrl) {
+                    const responseData = response.data || response;
+                    if (responseData.success && responseData.authUrl) {
                         const authWindow = window.open(
-                            response.data.authUrl,
+                            responseData.authUrl,
                             'GoogleAuth',
                             'width=500,height=600,scrollbars=yes,resizable=yes'
                         );
