@@ -1,16 +1,11 @@
-// In Replit, get the current domain and replace port 5000 with 8000 for backend
+// Use proxy for backend API
 const getBackendUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
   
-  if (typeof window !== 'undefined') {
-    const currentUrl = window.location.origin;
-    // Replace port 5000 with 8000 for backend
-    return currentUrl.replace(':5000', ':8000').replace('-5000-', '-8000-');
-  }
-  
-  return 'http://localhost:8000';
+  // Use the Vite proxy we set up
+  return '/api';
 };
 
 const API_BASE_URL = getBackendUrl();
