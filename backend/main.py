@@ -239,11 +239,23 @@ class ScheduledTaskOut(ScheduledTaskIn):
     updated_date: datetime
 
 
+# Multi-tenant support
+users_db: Dict[str, Dict[str, Any]] = {
+    "user-1": {"id": "user-1", "email": "user1@example.com", "name": "משתמש 1"},
+    "user-2": {"id": "user-2", "email": "user2@example.com", "name": "משתמש 2"}
+}
+
+current_user = "user-1"  # Simulated current user
+
 @app.get("/auth/me")
 def auth_me():
+    user = users_db.get(current_user)
+    if not user:
+        user = {"id": "user-1", "email": "user1@example.com", "name": "משתמש 1"}
     return {
-        "id": "local-user", 
-        "email": "local@example.com",
+        "id": user["id"], 
+        "email": user["email"],
+        "name": user.get("name", ""),
         "custom_field_1_label": "תעשייה",
         "custom_field_2_label": "גודל חברה", 
         "custom_field_3_label": "מקור הליד",
@@ -252,10 +264,21 @@ def auth_me():
     }
 
 
+# Multi-tenant agent filtering
+def get_user_agents(user_id: str):
+    return {k: v for k, v in agents.items() if v.get("user_id", "user-1") == user_id}
+
+def get_user_customers(user_id: str):
+    return {k: v for k, v in customers.items() if v.get("user_id", "user-1") == user_id}
+
+def get_user_tasks(user_id: str):
+    return {k: v for k, v in tasks.items() if v.get("user_id", "user-1") == user_id}
+
 # Agents CRUD
 @app.get("/agents", response_model=List[AgentOut])
 def list_agents():
-    return list(agents.values())
+    user_agents = get_user_agents(current_user)
+    return list(user_agents.values())
 
 
 @app.get("/agents/{agent_id}", response_model=AgentOut)
@@ -446,22 +469,8 @@ async def invoke_llm(payload: Dict[str, Any]):
     except Exception as e:
         print(f"Gemini error: {e}")
     
-    try:
-        if os.getenv("OPENAI_API_KEY"):
-            import openai
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": full_prompt}],
-                max_tokens=500
-            )
-            return {
-                "response": response.choices[0].message.content,
-                "tool_to_call": None
-            }
-    except Exception as e:
-        print(f"OpenAI error: {e}")
+    # OpenAI fallback removed for now - focus on Gemini
+    # Can be added later with proper openai library setup
     
     # Fallback response
     return {
