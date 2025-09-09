@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -36,7 +36,7 @@ app.add_middleware(
 
 
 # In-memory stores (replace with DB later) - POPULATED WITH REAL DATA
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Sample agents with real configurations
 agents: Dict[str, Dict[str, Any]] = {
@@ -130,7 +130,51 @@ tasks: Dict[str, Dict[str, Any]] = {
     }
 }
 
-activities: Dict[str, Dict[str, Any]] = {}
+activities: Dict[str, Dict[str, Any]] = {
+    "activity-1": {
+        "id": "activity-1",
+        "action": "צ'אט עם לקוח",
+        "description": "שיחה עם שירה כהן על הצעת מחיר",
+        "type": "chat",
+        "status": "success",
+        "agent_id": "agent-1",
+        "customer_id": "customer-1",
+        "created_date": datetime.utcnow() - timedelta(minutes=15),
+        "updated_date": datetime.utcnow() - timedelta(minutes=15)
+    },
+    "activity-2": {
+        "id": "activity-2", 
+        "action": "שליחת אימייל",
+        "description": "שליחת הצעת מחיר ללקוח פוטנציאלי",
+        "type": "email",
+        "status": "success",
+        "agent_id": "agent-1",
+        "customer_id": "customer-2",
+        "created_date": datetime.utcnow() - timedelta(hours=1),
+        "updated_date": datetime.utcnow() - timedelta(hours=1)
+    },
+    "activity-3": {
+        "id": "activity-3",
+        "action": "יצירת מסמך",
+        "description": "יצירת דוח סיכום עבור פגישה",
+        "type": "document",
+        "status": "success", 
+        "agent_id": "agent-2",
+        "created_date": datetime.utcnow() - timedelta(hours=2),
+        "updated_date": datetime.utcnow() - timedelta(hours=2)
+    },
+    "activity-4": {
+        "id": "activity-4",
+        "action": "עדכון CRM",
+        "description": "עדכון פרטי לקוח חדש במערכת",
+        "type": "crm",
+        "status": "in_progress",
+        "agent_id": "agent-3",
+        "customer_id": "customer-1",
+        "created_date": datetime.utcnow() - timedelta(minutes=30),
+        "updated_date": datetime.utcnow() - timedelta(minutes=30)
+    }
+}
 
 # Agent templates with real configurations
 agent_templates: Dict[str, Dict[str, Any]] = {
@@ -360,6 +404,12 @@ def search_customers(filter: Dict[str, Any]):
         v = str(value).lower()
         results = [c for c in results if str(c.get(key, "")).lower().find(v) != -1]
     return results
+
+
+# Activities CRUD
+@app.get("/activities", response_model=List[Dict[str, Any]])
+def list_activities():
+    return list(activities.values())
 
 
 # Scheduled Tasks
