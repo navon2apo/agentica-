@@ -1,4 +1,19 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// In Replit, get the current domain and replace port 5000 with 8000 for backend
+const getBackendUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  if (typeof window !== 'undefined') {
+    const currentUrl = window.location.origin;
+    // Replace port 5000 with 8000 for backend
+    return currentUrl.replace(':5000', ':8000').replace('-5000-', '-8000-');
+  }
+  
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = getBackendUrl();
 
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;

@@ -1,0 +1,109 @@
+הנה הנחיות מדויקות ל-Replit AI להמשך הפיתוח:
+
+## הנחיות ל-Replit AI
+
+### מצב נוכחי
+- **הפרויקט**: AgentForge - פלטפורמת SaaS לסוכני AI אוטונומיים
+- **טכנולוגיה**: Vite + React (פרונט), FastAPI (בקאנד)
+- **מצב**: נותק מ-Base44, עובד עם בקאנד מקומי
+
+### מה כבר מוכן
+- ✅ פרונט מלא: Agents, Customers, CRM, Chat, Settings, Scheduled Tasks
+- ✅ API client מקומי (`src/api/client.js`) 
+- ✅ FastAPI backend עם CRUD מלא (`backend/main.py`)
+- ✅ Endpoints: `/agents`, `/customers`, `/scheduled-tasks`, `/google/*`, `/invoke-llm`
+
+### מה צריך להשלים עכשיו
+
+#### 1. Scheduler אמיתי
+```python
+# הוסף ל-backend/main.py
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+scheduler = AsyncIOScheduler()
+
+@app.on_event("startup")
+async def start_scheduler():
+    scheduler.start()
+    # טען משימות קיימות מה-DB והפעל אותן
+
+@app.on_event("shutdown") 
+async def shutdown_scheduler():
+    scheduler.shutdown()
+```
+
+#### 2. חיבור LLM אמיתי
+```python
+# הוסף ל-backend/main.py
+import google.generativeai as genai
+
+@app.post("/invoke-llm")
+async def invoke_llm(payload: dict):
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(payload["prompt"])
+    return {"response": response.text}
+```
+
+#### 3. Google APIs אמיתיים
+```python
+# הוסף ל-backend/main.py
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+@app.post("/google/gmail")
+async def gmail_action(payload: dict):
+    # השתמש ב-Credentials מהמשתמש
+    service = build('gmail', 'v1', credentials=user_creds)
+    # ביצוע הפעולה המבוקשת
+```
+
+#### 4. DB קבוע (Supabase)
+```python
+# החלף את ה-in-memory stores ב:
+from supabase import create_client
+
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_ANON_KEY")
+)
+```
+
+### קבצי .env שצריך
+```bash
+# Frontend (.env)
+VITE_API_URL=http://localhost:8000
+
+# Backend (backend/.env)
+GEMINI_API_KEY=your_key_here
+GOOGLE_OAUTH_CLIENT_ID=your_client_id
+GOOGLE_OAUTH_CLIENT_SECRET=your_client_secret
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_key
+```
+
+### מה לשמור עליו
+- ✅ כל ה-UI components (`src/components/`)
+- ✅ כל ה-pages (`src/pages/`)
+- ✅ ה-API client (`src/api/client.js`)
+- ✅ המבנה של FastAPI (`backend/main.py`)
+
+### מה להסיר
+- ❌ כל התייחסות ל-`@base44/sdk`
+- ❌ `src/api/base44Client.js` (אם קיים)
+- ❌ כל Base44 imports
+
+### סדר עדיפויות
+1. **Scheduler** - כדי שמשימות מתוזמנות יעבדו
+2. **LLM אמיתי** - כדי שהצ'אט יעבוד
+3. **Google APIs** - כדי שהאינטגרציות יעבדו
+4. **DB קבוע** - כדי שהנתונים יישמרו
+
+### בדיקות
+- יצירת Agent → עובד
+- יצירת Customer → עובד  
+- "Run now" במשימה → עובד
+- צ'אט עם סוכן → עובד (עם LLM אמיתי)
+
+**המטרה**: פלטפורמה עצמאית לחלוטין, ללא תלות ב-Base44, עם כל הפונקציונליות המקורית.
