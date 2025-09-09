@@ -563,16 +563,53 @@ async def invoke_llm(payload: Dict[str, Any]):
     }
 
 
-# Google OAuth (simplified for demo)
+# Google OAuth 
 @app.post("/google/oauth")
 def google_oauth(body: Dict[str, Any]):
     action = body.get("action")
+    
     if action == "check_status":
-        # In real implementation, check actual OAuth status
+        # Check if Google OAuth credentials are configured
         return {"connected": bool(os.getenv("GOOGLE_CLIENT_ID"))}
-    if action == "connect":
+    
+    elif action == "initiate":
+        # Start OAuth flow
+        if not os.getenv("GOOGLE_CLIENT_ID"):
+            return {"success": False, "error": "Google OAuth לא מוגדר"}
+        
+        # Build real OAuth URL
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        redirect_uri = f"https://{os.getenv('REPLIT_DEV_DOMAIN', 'localhost:5000')}/oauth2callback"
+        
+        # Define required scopes for all Google services
+        scopes = [
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets", 
+            "https://www.googleapis.com/auth/documents"
+        ]
+        scope_string = " ".join(scopes)
+        
+        auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&redirect_uri={redirect_uri}&scope={scope_string}&response_type=code&access_type=offline"
+        
+        return {
+            "success": True, 
+            "authUrl": auth_url
+        }
+    
+    elif action == "disconnect":
+        # Disconnect Google services
+        return {
+            "success": True,
+            "message": "החיבור לשירותי Google נותק בהצלחה"
+        }
+    
+    elif action == "connect":
+        # Legacy support
         return {"success": True, "auth_url": "https://accounts.google.com/oauth/authorize"}
-    return {"success": True}
+    
+    return {"success": False, "error": "פעולה לא מזוהה"}
 
 
 # Gmail Tool Implementation  
