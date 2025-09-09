@@ -569,8 +569,19 @@ def google_oauth(body: Dict[str, Any]):
     action = body.get("action")
     
     if action == "check_status":
-        # Check if Google OAuth credentials are configured
-        return {"connected": bool(os.getenv("GOOGLE_CLIENT_ID"))}
+        # Check if user has valid Google OAuth token
+        user_id = "default_user"  # In real app: get from auth session
+        
+        # For now, check if app credentials exist (later: check user token)
+        has_app_credentials = bool(os.getenv("GOOGLE_CLIENT_ID"))
+        # TODO: Check if user has valid tokens in database
+        user_has_token = False  # TODO: Check if user has valid Google OAuth tokens
+        
+        return {
+            "success": True,
+            "connected": has_app_credentials and user_has_token,
+            "needs_auth": has_app_credentials and not user_has_token
+        }
     
     elif action == "initiate":
         # Start OAuth flow
@@ -898,6 +909,50 @@ async def shutdown_event():
     """Stop the scheduler"""
     scheduler.shutdown()
     print("Scheduler stopped")
+
+
+# OAuth Callback Handler
+@app.get("/oauth2callback")
+def oauth_callback(code: str = None, error: str = None):
+    """Handle Google OAuth callback"""
+    if error:
+        return f"""
+        <html>
+        <script>
+            window.opener.postMessage({{type: 'oauth_error', error: '{error}'}}, '*');
+            window.close();
+        </script>
+        </html>
+        """
+    
+    if not code:
+        return "שגיאה: קוד OAuth חסר"
+    
+    try:
+        # TODO: Exchange code for tokens and save to user
+        print(f"OAuth code received: {code[:20]}...")
+        
+        # Simulate token exchange success
+        # In real implementation: call Google token endpoint
+        
+        return f"""
+        <html>
+        <script>
+            console.log('OAuth flow completed successfully');
+            window.opener.postMessage({{type: 'oauth_complete', success: true}}, '*');
+            window.close();
+        </script>
+        </html>
+        """
+    except Exception as e:
+        return f"""
+        <html>
+        <script>
+            window.opener.postMessage({{type: 'oauth_error', error: 'Token exchange failed'}}, '*');
+            window.close();
+        </script>
+        </html>
+        """
 
 @app.get("/health")
 def health():

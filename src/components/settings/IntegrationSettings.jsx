@@ -65,12 +65,19 @@ export default function IntegrationSettings() {
     const checkGoogleConnectionStatus = async () => {
         try {
             const response = await googleOAuth({ action: 'check_status' });
-            const isConnected = response.data.connected;
+            // Handle both direct response and nested data response
+            const responseData = response.data || response;
+            const isConnected = responseData.connected || false;
+            const needsAuth = responseData.needs_auth || false;
 
             setIntegrations(prev =>
                 prev.map(integration => {
                     if (integration.id === 'google-services') {
-                        return { ...integration, status: isConnected ? 'connected' : 'available' };
+                        return { 
+                            ...integration, 
+                            status: isConnected ? 'connected' : 'available',
+                            needsAuth: needsAuth
+                        };
                     }
                     return integration;
                 })
