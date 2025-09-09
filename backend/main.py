@@ -62,6 +62,14 @@ class CustomerIn(BaseModel):
     company: Optional[str] = None
     phone: Optional[str] = None
     status: Optional[str] = "lead"
+    segment: Optional[str] = "small_business"
+    notes: Optional[str] = None
+    call_summary: Optional[str] = None
+    custom_field_1: Optional[str] = None
+    custom_field_2: Optional[str] = None
+    custom_field_3: Optional[str] = None
+    custom_field_4: Optional[str] = None
+    custom_field_5: Optional[str] = None
 
 
 class CustomerOut(CustomerIn):
@@ -94,7 +102,15 @@ class ScheduledTaskOut(ScheduledTaskIn):
 
 @app.get("/auth/me")
 def auth_me():
-    return {"id": "local-user", "email": "local@example.com"}
+    return {
+        "id": "local-user", 
+        "email": "local@example.com",
+        "custom_field_1_label": "תעשייה",
+        "custom_field_2_label": "גודל חברה", 
+        "custom_field_3_label": "מקור הליד",
+        "custom_field_4_label": "עדיפות",
+        "custom_field_5_label": "הערות נוספות"
+    }
 
 
 # Agents CRUD

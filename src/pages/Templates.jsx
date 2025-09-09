@@ -27,7 +27,7 @@ export default function Templates() {
     const loadTemplates = async () => {
         try {
             const templatesData = await AgentTemplate.list('-popularity_score');
-            setTemplates(templatesData);
+            setTemplates(Array.isArray(templatesData) ? templatesData : []);
         } catch (error) {
             console.error('Error loading templates:', error);
         } finally {
@@ -35,14 +35,14 @@ export default function Templates() {
         }
     };
 
-    const filteredTemplates = templates.filter(template => {
-        const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             template.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredTemplates = Array.isArray(templates) ? templates.filter(template => {
+        const matchesSearch = template.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             template.description?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter;
         return matchesSearch && matchesCategory;
-    });
+    }) : [];
 
-    const categories = [...new Set(templates.map(t => t.category))].filter(Boolean);
+    const categories = Array.isArray(templates) ? [...new Set(templates.map(t => t.category))].filter(Boolean) : [];
 
     return (
         <div className="space-y-6">

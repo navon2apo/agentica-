@@ -33,7 +33,7 @@ export default function Customers() {
     const loadCustomers = async () => {
         try {
             const customersData = await Customer.list('-last_interaction');
-            setCustomers(customersData);
+            setCustomers(Array.isArray(customersData) ? customersData : []);
         } catch (error) {
             console.error('Error loading customers:', error);
         } finally {
@@ -69,20 +69,20 @@ export default function Customers() {
         }
     };
 
-    const filteredCustomers = customers.filter(customer => {
-        const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             (customer.company && customer.company.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredCustomers = Array.isArray(customers) ? customers.filter(customer => {
+        const matchesSearch = customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             (customer.company && customer.company?.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesStatus = filterStatus === 'all' || customer.status === filterStatus;
         return matchesSearch && matchesStatus;
-    });
+    }) : [];
 
     const statusCounts = {
-        all: customers.length,
-        lead: customers.filter(c => c.status === 'lead').length,
-        prospect: customers.filter(c => c.status === 'prospect').length,
-        customer: customers.filter(c => c.status === 'customer').length,
-        churned: customers.filter(c => c.status === 'churned').length
+        all: Array.isArray(customers) ? customers.length : 0,
+        lead: Array.isArray(customers) ? customers.filter(c => c.status === 'lead').length : 0,
+        prospect: Array.isArray(customers) ? customers.filter(c => c.status === 'prospect').length : 0,
+        customer: Array.isArray(customers) ? customers.filter(c => c.status === 'customer').length : 0,
+        churned: Array.isArray(customers) ? customers.filter(c => c.status === 'churned').length : 0
     };
 
     return (

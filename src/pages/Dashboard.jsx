@@ -44,13 +44,13 @@ export default function Dashboard() {
             ]);
 
             setStats({
-                totalAgents: agents.length,
-                activeAgents: agents.filter(a => a.status === 'active').length,
-                totalCustomers: customers.length,
-                totalActivities: activities.length
+                totalAgents: Array.isArray(agents) ? agents.length : 0,
+                activeAgents: Array.isArray(agents) ? agents.filter(a => a.status === 'active').length : 0,
+                totalCustomers: Array.isArray(customers) ? customers.length : 0,
+                totalActivities: Array.isArray(activities) ? activities.length : 0
             });
 
-            setRecentActivities(activities);
+            setRecentActivities(Array.isArray(activities) ? activities : []);
 
             // Generate mock performance data
             const mockData = Array.from({ length: 7 }, (_, i) => ({
