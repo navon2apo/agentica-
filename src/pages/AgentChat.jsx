@@ -257,7 +257,9 @@ export default function AgentChat() {
     const checkConnection = async () => {
       try {
         const response = await googleOAuth({ action: 'check_status' });
-        if (response.data && response.data.connected) {
+        // Handle both direct response and nested data response
+        const responseData = response.data || response;
+        if (responseData && responseData.connected) {
           setGoogleConnected(true);
         } else {
           setGoogleConnected(false);
