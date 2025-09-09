@@ -32,3 +32,11 @@ export const Activity = {
 export const User = {
   me: async () => api.get('/auth/me')
 };
+
+export const AgentTemplate = {
+  list: async () => api.get('/agent-templates'),
+  get: async (id) => api.get(`/agent-templates/${id}`),
+  create: async (payload) => api.post('/agent-templates', payload),
+  update: async (id, payload) => api.put(`/agent-templates/${id}`, payload),
+  delete: async (id) => api.delete(`/agent-templates/${id}`)
+};
